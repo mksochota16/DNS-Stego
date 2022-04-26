@@ -3,11 +3,14 @@ import socket
 import dnslib
 
 import os
+import signal
+import sys
 
 n_times_6_bytes = 0
 secret_bytes: bytes
 collector_ip = '1.1.1.1'  # FIXME
 end_file = False
+file = ""
 
 
 def receive_data(udps, file):
@@ -42,12 +45,14 @@ def decode_data(data, file):
     if not end_file:
         file.write(secret)
     if b'\x00' in secret:
+        file.write(b'===============================')
         file.close()
         end_file = True
     return data, secret
 
 
 def main_collector_loop(udps):
+    global file
     with open("decoded.txt", 'ab') as file:
         while True:
             data, addr, type, domain, answer, secret = receive_data(udps, file)
@@ -76,7 +81,16 @@ def init_listener():
         exit(1)
 
 
+def signal_handler(sig, frame):
+    global file
+    print('You pressed Ctrl+C!')
+    if not end_file:
+        file.close()
+    sys.exit(0)
+
+
 def main():
+    signal.signal(signal.SIGINT, signal_handler)
     udps = init_listener()
     drop_privileges()
     try:
