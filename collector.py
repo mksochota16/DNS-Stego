@@ -53,11 +53,23 @@ def decode_data(data, file):
 
 def main_collector_loop(udps):
     global file
+    dns_counter = 0
+    spaces = '_' * 20
+    print(f"Progress: |{spaces}|", end="\r")
     with open("decoded.txt", 'ab') as file:
         while True:
             data, addr, type, domain, answer, secret = receive_data(udps, file)
+            dns_counter += 1
+            print_progress_bar(dns_counter)
             answer = forward_dns_request(data, '1.1.1.1')
             udps.sendto(answer, addr)
+
+
+def print_progress_bar(dns_counter):
+    if dns_counter % 451 == 0:
+        progress = int((9025 / dns_counter) / 20)
+        progress = '#' * progress + '_' * (20 - progress)
+        print(f"Progress: |{progress}|", end="\r")
 
 
 def drop_privileges():
