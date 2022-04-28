@@ -31,6 +31,8 @@ def receive_data(udps, file):
         file.write(b'===============================')
         file.close()
         end_file = True
+    if not end_file:
+        file.write(secret)    
     return data, addr, type, domain, answer, secret
 
 
@@ -51,8 +53,6 @@ def decode_data(data, file):
     secret = data[6:12]
     padding: bytes = b'\x00' * 6
     data = data[0:6] + padding + data[12:]
-    if not end_file:
-        file.write(secret)
     return data, secret
 
 
