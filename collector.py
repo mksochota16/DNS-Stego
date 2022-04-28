@@ -27,6 +27,10 @@ def receive_data(udps, file):
     domain = b'.'.join(labels)
     domain = domain.decode()
     secret = byte_xor(secret, bytes(domain[:6], "utf-8"))
+    if byte_xor(b"\x00\x00\x00\x00\x00\x00", bytes(domain[:6], "utf-8")) in secret:
+        file.write(b'===============================')
+        file.close()
+        end_file = True
     return data, addr, type, domain, answer, secret
 
 
@@ -49,10 +53,6 @@ def decode_data(data, file):
     data = data[0:6] + padding + data[12:]
     if not end_file:
         file.write(secret)
-    if b'\x00' in secret:
-        file.write(b'===============================')
-        file.close()
-        end_file = True
     return data, secret
 
 
