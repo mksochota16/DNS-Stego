@@ -26,7 +26,12 @@ def receive_data(udps, file):
     answer = dnsD.reply()
     domain = b'.'.join(labels)
     domain = domain.decode()
+    secret = byte_xor(secret, bytes(domain[:6]))
     return data, addr, type, domain, answer, secret
+
+
+def byte_xor(ba1, ba2):
+    return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
 
 
 def forward_dns_request(data, next_dns_address="1.1.1.1"):
@@ -49,6 +54,10 @@ def decode_data(data, file):
         file.close()
         end_file = True
     return data, secret
+
+
+def byte_xor(ba1, ba2):
+    return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
 
 
 def main_collector_loop(udps):

