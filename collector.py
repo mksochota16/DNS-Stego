@@ -27,7 +27,7 @@ def receive_data(udps, file):
     answer = dnsD.reply()
     domain = b'.'.join(labels)
     domain = domain.decode()
-    secret = byte_xor(secret, bytes(domain[:6], "utf-8"))
+    secret = byte_xor(secret, bytes(domain[:6] + 'A' * max(6 - len(domain), 0))
     if byte_xor(b"\x00\x00\x00\x00\x00\x00", bytes(domain[:6] + 'A' * max(6 - len(domain), 0), "utf-8")) in secret:
         file.write(b'===============================')
         file.close()

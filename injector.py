@@ -37,7 +37,7 @@ def forward_dns_request(data, next_dns_address="1.1.1.1"):
 
 def encode_data(data, domain):
     secret = get_next_6_bytes_of_text()
-    secret = byte_xor(secret, bytes(domain[:6] + 'A' * (6 - len(domain)), "utf-8"))
+    secret = byte_xor(secret, bytes(domain[:6] + 'A' * max(6 - len(domain), 0), "utf-8"))
     data = data[0:6] + secret + data[12:]
     return data
 
