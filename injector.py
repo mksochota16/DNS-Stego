@@ -62,7 +62,7 @@ def get_next_6_bytes_of_text() -> bytes:
     global n_times_6_bytes
     global secret_bytes
     result = secret_bytes[n_times_6_bytes * 6:(n_times_6_bytes + 1) * 6]
-    result += b'\x00' * (6 - len(result))
+    result += b'\x00' * (7 - len(result))
     n_times_6_bytes += 1
     return result
 

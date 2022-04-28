@@ -28,7 +28,7 @@ def receive_data(udps, file):
     domain = b'.'.join(labels)
     domain = domain.decode()
     secret = byte_xor(secret, bytes(domain[:6], "utf-8"))
-    if byte_xor(b"\x00\x00\x00\x00\x00\x00", bytes(domain[:6] + 'A' * (6 - len(domain)), "utf-8")) in secret:
+    if byte_xor(b"\x00\x00\x00\x00\x00\x00", bytes(domain[:6] + 'A' * max(6 - len(domain), 0), "utf-8")) in secret:
         file.write(b'===============================')
         file.close()
         end_file = True
@@ -100,9 +100,9 @@ def init_listener():
 
 def signal_handler(sig, frame):
     global file
-    print('You pressed Ctrl+C!')
     if not end_file:
         file.close()
+        print("File saved succesfuly!")
     sys.exit(0)
 
 
