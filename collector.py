@@ -14,6 +14,7 @@ file = ""
 
 
 def receive_data(udps, file):
+    global end_file
     types = {1: "A", 2: "NS", 15: "MX", 16: "TXT", 28: "AAAA"}
     data, addr = udps.recvfrom(1024)
     data, secret = decode_data(data, file)
@@ -49,7 +50,6 @@ def forward_dns_request(data, next_dns_address="1.1.1.1"):
 
 
 def decode_data(data, file):
-    global end_file
     secret = data[6:12]
     padding: bytes = b'\x00' * 6
     data = data[0:6] + padding + data[12:]
